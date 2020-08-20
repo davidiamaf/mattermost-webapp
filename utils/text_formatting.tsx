@@ -207,11 +207,9 @@ export function formatText(
             convertSearchTermToRegex
         );
     } else {
-        options.searchPatterns = parseSearchTerms(options.searchTerm || '').
-            map(convertSearchTermToRegex).
-            sort((a, b) => {
-                return b.term.length - a.term.length;
-            });
+        options.searchPatterns = parseSearchTerms(options.searchTerm || '').map(convertSearchTermToRegex).sort((a, b) => {
+            return b.term.length - a.term.length;
+        });
     }
 
     if (options.renderer) {
@@ -315,7 +313,7 @@ export function sanitizeHtml(text: string) {
 
 // Copied from our fork of commonmark.js
 const emailAlphaNumericChars = '\\p{L}\\p{Nd}';
-const emailSpecialCharacters = "!#$%&'*+\\-\\/=?^_`{|}~";
+const emailSpecialCharacters = '!#$%&\'*+\\-\\/=?^_`{|}~';
 const emailRestrictedSpecialCharacters = '\\s(),:;<>@\\[\\]';
 const emailValidCharacters = emailAlphaNumericChars + emailSpecialCharacters;
 const emailValidRestrictedCharacters =
@@ -526,7 +524,7 @@ const htmlEntities = {
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    "'": '&#039;',
+    '\'': '&#039;',
 };
 
 export function escapeHtml(text: string) {
@@ -537,12 +535,7 @@ export function escapeHtml(text: string) {
 }
 
 export function convertEntityToCharacter(text: string) {
-    return text.
-        replace(/&lt;/g, '<').
-        replace(/&gt;/g, '>').
-        replace(/&#39;/g, "'").
-        replace(/&quot;/g, '"').
-        replace(/&amp;/g, '&');
+    return text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, '\'').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 }
 
 function highlightCurrentMentions(
@@ -635,15 +628,42 @@ function autolinkAcronyms(text: string, tokens: Tokens) {
             {
                 Text: 'DOD',
                 Brief: 'Department Of Davids',
-                Definition: "Uncle Sam's Servants",
+                Definition: 'Uncle Sam\'s Servants',
             },
         ],
     ]);
     const key = 'DOD';
     const v = lookup.get(key) || {} as Acronym;
-    const acronymString = ` <Tooltip title="${v.Brief}" Arrow>${v.Text}<Button>${v.Definition}</Button></Tooltip>`;
+
+    // const acronymString = ` <Tooltip  class="tooltip-demo"title="${v.Brief} ${v.Definition}" arrow placement="bottom-end"><Button>${v.Text}</Button></Tooltip>`;
+    //const acronymString = `<a href="#" data-toggle="popover" class="tooltip-text" title="${v.Brief}" data-content="${v.Definition}">${v.Text}</a><script>$(document).ready(function(){$('[data-toggle="popover"]').popover();});</script>`;
+
+    const acronymString = acronymExpanded(v, key);
+
     tokens.set(key, {value: acronymString, originalText: key});
     return text.replace(`\\W${key}\\W`, acronymString);
+}
+
+export interface AcronymData {
+    key: string;
+    Text: string;
+    Brief: string;
+    Definition: string;
+}
+
+function acronymExpanded(acronym: AcronymData, original: string): string {
+    return (
+        `<span
+            className='tooltip-parent'
+            title='${acronym.Brief}'
+        >${original}
+            <span className='tooltip-text'>
+                <span className='text'>${ acronym.Text }</span>
+                <span className='brief'>${ acronym.Brief }</span>
+                <span className='definition'>${ acronym.Definition }</span>
+            </span>
+        </span>
+    `);
 }
 
 function autolinkHashtags(
@@ -914,9 +934,7 @@ export function handleUnicodeEmoji(
             }
         }
 
-        const emojiCode = codePoints.
-            map((codePoint) => codePoint.toString(16)).
-            join('-');
+        const emojiCode = codePoints.map((codePoint) => codePoint.toString(16)).join('-');
 
         // convert emoji to image if supported, or wrap in span to apply appropriate formatting
         if (emojiMap.hasUnicode(emojiCode)) {
