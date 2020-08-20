@@ -29,16 +29,16 @@ const htmlEmojiPattern = /^<p>\s*(?:<img class="emoticon"[^>]*>|<span data-emoti
 // @mentions and ~channels to links by taking a user's message and returning a string of formatted html. Also takes
 // a number of options as part of the second parameter:
 export type ChannelNamesMap = {
-    [name: string]: {
+    [name: string]:
+    | {
         display_name: string;
         team_name?: string;
-    } | Channel;
+    }
+    | Channel;
 };
 
-export type Tokens = Map<
-string,
-{ value: string; originalText: string; hashtag?: string }
->;
+export type Tokens = Map<string,
+{ value: string; originalText: string; hashtag?: string }>;
 
 export type SearchPattern = {
     pattern: RegExp;
@@ -55,119 +55,120 @@ export type Team = {
     name: string;
     displayName: string;
 };
+
 interface TextFormattingOptionsBase {
 
     /**
-   * If specified, this word is highlighted in the resulting html.
-   *
-   * Defaults to nothing.
-   */
+     * If specified, this word is highlighted in the resulting html.
+     *
+     * Defaults to nothing.
+     */
     searchTerm: string;
 
     /**
-   * If specified, an array of words that will be highlighted.
-   *
-   * If both this and `searchTerm` are specified, this takes precedence.
-   *
-   * Defaults to nothing.
-   */
+     * If specified, an array of words that will be highlighted.
+     *
+     * If both this and `searchTerm` are specified, this takes precedence.
+     *
+     * Defaults to nothing.
+     */
     searchMatches: string[];
 
     searchPatterns: SearchPattern[];
 
     /**
-   * Specifies whether or not to highlight mentions of the current user.
-   *
-   * Defaults to `true`.
-   */
+     * Specifies whether or not to highlight mentions of the current user.
+     *
+     * Defaults to `true`.
+     */
     mentionHighlight: boolean;
 
     /**
-   * Specifies whether or not to display group mentions as blue links.
-   *
-   * Defaults to `false`.
-   */
+     * Specifies whether or not to display group mentions as blue links.
+     *
+     * Defaults to `false`.
+     */
     disableGroupHighlight: boolean;
 
     /**
-   * A list of mention keys for the current user to highlight.
-   */
+     * A list of mention keys for the current user to highlight.
+     */
     mentionKeys: MentionKey[];
 
     /**
-   * Specifies whether or not to remove newlines.
-   *
-   * Defaults to `false`.
-   */
+     * Specifies whether or not to remove newlines.
+     *
+     * Defaults to `false`.
+     */
     singleline: boolean;
 
     /**
-   * Enables emoticon parsing with a data-emoticon attribute.
-   *
-   * Defaults to `true`.
-   */
+     * Enables emoticon parsing with a data-emoticon attribute.
+     *
+     * Defaults to `true`.
+     */
     emoticons: boolean;
 
     /**
-   * Enables markdown parsing.
-   *
-   * Defaults to `true`.
-   */
+     * Enables markdown parsing.
+     *
+     * Defaults to `true`.
+     */
     markdown: boolean;
 
     /**
-   * The origin of this Mattermost instance.
-   *
-   * If provided, links to channels and posts will be replaced with internal
-   * links that can be handled by a special click handler.
-   */
+     * The origin of this Mattermost instance.
+     *
+     * If provided, links to channels and posts will be replaced with internal
+     * links that can be handled by a special click handler.
+     */
     siteURL: string;
 
     /**
-   * Whether or not to render at mentions into spans with a data-mention attribute.
-   *
-   * Defaults to `false`.
-   */
+     * Whether or not to render at mentions into spans with a data-mention attribute.
+     *
+     * Defaults to `false`.
+     */
     atMentions: boolean;
 
     /**
-   * An object mapping channel display names to channels.
-   *
-   * If provided, ~channel mentions will be replaced with links to the relevant channel.
-   */
+     * An object mapping channel display names to channels.
+     *
+     * If provided, ~channel mentions will be replaced with links to the relevant channel.
+     */
     channelNamesMap: ChannelNamesMap;
 
     /**
-   * The current team.
-   */
+     * The current team.
+     */
     team: Team;
 
     /**
-   * If specified, images are proxied.
-   *
-   * Defaults to `false`.
-   */
+     * If specified, images are proxied.
+     *
+     * Defaults to `false`.
+     */
     proxyImages: boolean;
 
     /**
-   * An array of url schemes that will be allowed for autolinking.
-   *
-   * Defaults to autolinking with any url scheme.
-   */
+     * An array of url schemes that will be allowed for autolinking.
+     *
+     * Defaults to autolinking with any url scheme.
+     */
     autolinkedUrlSchemes: string[];
 
     /**
-   * A custom renderer object to use in the formatWithRenderer function.
-   *
-   * Defaults to empty.
-   */
+     * A custom renderer object to use in the formatWithRenderer function.
+     *
+     * Defaults to empty.
+     */
     renderer: Renderer;
 
     /**
-   * Minimum number of characters in a hashtag.
-   *
-   * Defaults to `3`.
-   */
+     * Minimum number of characters in a hashtag.
+     *
+     * Defaults to `3`.
+     */
     minimumHashtagLength: number;
 }
 
@@ -191,7 +192,7 @@ const cjkPattern = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-
 export function formatText(
     text: string,
     inputOptions: TextFormattingOptions = DEFAULT_OPTIONS,
-    emojiMap: EmojiMap,
+    emojiMap: EmojiMap
 ) {
     if (!text || typeof text !== 'string') {
         return '';
@@ -202,11 +203,15 @@ export function formatText(
     const hasPhrases = (/"([^"]*)"/).test(options.searchTerm || '');
 
     if (options.searchMatches && !hasPhrases) {
-        options.searchPatterns = options.searchMatches.map(convertSearchTermToRegex);
+        options.searchPatterns = options.searchMatches.map(
+            convertSearchTermToRegex
+        );
     } else {
-        options.searchPatterns = parseSearchTerms(options.searchTerm || '').map(convertSearchTermToRegex).sort((a, b) => {
-            return b.term.length - a.term.length;
-        });
+        options.searchPatterns = parseSearchTerms(options.searchTerm || '').
+            map(convertSearchTermToRegex).
+            sort((a, b) => {
+                return b.term.length - a.term.length;
+            });
     }
 
     if (options.renderer) {
@@ -217,11 +222,13 @@ export function formatText(
         output = Markdown.format(output, options, emojiMap);
         if (output.includes('class="markdown-inline-img"')) {
             /*
-            ** remove p tag to allow other divs to be nested,
-            ** which allows markdown images to open preview window
-            */
+             ** remove p tag to allow other divs to be nested,
+             ** which allows markdown images to open preview window
+             */
             const replacer = (match: string) => {
-                return match === '<p>' ? '<div className="markdown-inline-img__container">' : '</div>';
+                return match === '<p>' ?
+                    '<div className="markdown-inline-img__container">' :
+                    '</div>';
             };
             output = output.replace(/<p>|<\/p>/g, replacer);
         }
@@ -243,7 +250,11 @@ export function formatText(
 }
 
 // Performs most of the actual formatting work for formatText. Not intended to be called normally.
-export function doFormatText(text: string, options: TextFormattingOptions, emojiMap: EmojiMap) {
+export function doFormatText(
+    text: string,
+    options: TextFormattingOptions,
+    emojiMap: EmojiMap
+) {
     let output = text;
 
     const tokens = new Map();
@@ -258,12 +269,14 @@ export function doFormatText(text: string, options: TextFormattingOptions, emoji
             output,
             tokens,
             options.channelNamesMap,
-            options.team,
+            options.team
         );
     }
 
     output = autolinkEmails(output, tokens);
     output = autolinkHashtags(output, tokens, options.minimumHashtagLength);
+
+    output = autolinkAcronyms(output, tokens);
 
     if (!('emoticons' in options) || options.emoticons) {
         output = Emoticons.handleEmoticons(output, tokens);
@@ -305,20 +318,21 @@ const emailAlphaNumericChars = '\\p{L}\\p{Nd}';
 const emailSpecialCharacters = "!#$%&'*+\\-\\/=?^_`{|}~";
 const emailRestrictedSpecialCharacters = '\\s(),:;<>@\\[\\]';
 const emailValidCharacters = emailAlphaNumericChars + emailSpecialCharacters;
-const emailValidRestrictedCharacters = emailValidCharacters + emailRestrictedSpecialCharacters;
+const emailValidRestrictedCharacters =
+    emailValidCharacters + emailRestrictedSpecialCharacters;
 const emailStartPattern =
-  '(?:[' +
-  emailValidCharacters +
-  '](?:[' +
-  emailValidCharacters +
-  ']|\\.(?!\\.|@))*|\\"[' +
-  emailValidRestrictedCharacters +
-  '.]+\\")@';
+    '(?:[' +
+    emailValidCharacters +
+    '](?:[' +
+    emailValidCharacters +
+    ']|\\.(?!\\.|@))*|\\"[' +
+    emailValidRestrictedCharacters +
+    '.]+\\")@';
 const reEmail = XRegExp.cache(
     '(^|[^\\pL\\d])(' +
     emailStartPattern +
     '[\\pL\\d.\\-]+[.]\\pL{2,4}(?=$|[^\\p{L}]))',
-    'g',
+    'g'
 );
 
 // Convert emails into tokens
@@ -326,7 +340,7 @@ function autolinkEmails(text: string, tokens: Tokens) {
     function replaceEmailWithToken(
         fullMatch: string,
         prefix: string,
-        email: string,
+        email: string
     ) {
         const index = tokens.size;
         const alias = `$MM_EMAIL${index}$`;
@@ -370,7 +384,7 @@ export function autolinkAtMentions(text: string, tokens: Tokens) {
     // handle @channel, @all, @here mentions first (supports trailing punctuation)
     output = output.replace(
         Constants.SPECIAL_MENTIONS_REGEX,
-        replaceAtMentionWithToken,
+        replaceAtMentionWithToken
     );
 
     // handle all other mentions (supports trailing punctuation)
@@ -384,32 +398,50 @@ export function autolinkAtMentions(text: string, tokens: Tokens) {
 }
 
 export function allAtMentions(text: string) {
-    return text.match(Constants.SPECIAL_MENTIONS_REGEX && AT_MENTION_PATTERN) || [];
+    return (
+        text.match(Constants.SPECIAL_MENTIONS_REGEX && AT_MENTION_PATTERN) || []
+    );
 }
 
 function autolinkChannelMentions(
     text: string,
     tokens: Tokens,
     channelNamesMap: ChannelNamesMap,
-    team?: Team,
+    team?: Team
 ) {
     function channelMentionExists(c: string) {
         return Boolean(channelNamesMap[c]);
     }
-    function addToken(channelName: string, teamName: string, mention: string, displayName: string) {
+
+    function addToken(
+        channelName: string,
+        teamName: string,
+        mention: string,
+        displayName: string
+    ) {
         const index = tokens.size;
         const alias = `$MM_CHANNELMENTION${index}$`;
         let href = '#';
         if (teamName) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            href = ((window as any).basename || '') + '/' + teamName + '/channels/' + channelName;
+            href =
+                ((window as any).basename || '') +
+                '/' +
+                teamName +
+                '/channels/' +
+                channelName;
             tokens.set(alias, {
                 value: `<a class="mention-link" href="${href}" data-channel-mention-team="${teamName}" "data-channel-mention="${channelName}">~${displayName}</a>`,
                 originalText: mention,
             });
         } else if (team) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            href = ((window as any).basename || '') + '/' + team.name + '/channels/' + channelName;
+            href =
+                ((window as any).basename || '') +
+                '/' +
+                team.name +
+                '/channels/' +
+                channelName;
             tokens.set(alias, {
                 value: `<a class="mention-link" href="${href}" data-channel-mention="${channelName}">~${displayName}</a>`,
                 originalText: mention,
@@ -422,7 +454,7 @@ function autolinkChannelMentions(
     function replaceChannelMentionWithToken(
         fullMatch: string,
         mention: string,
-        channelName: string,
+        channelName: string
     ) {
         let channelNameLower = channelName.toLowerCase();
 
@@ -437,7 +469,7 @@ function autolinkChannelMentions(
                 channelNameLower,
                 teamName,
                 mention,
-                escapeHtml(channelValue.display_name),
+                escapeHtml(channelValue.display_name)
             );
             return alias;
         }
@@ -460,7 +492,7 @@ function autolinkChannelMentions(
                         channelNameLower,
                         teamName,
                         '~' + channelNameLower,
-                        escapeHtml(channelValue.display_name),
+                        escapeHtml(channelValue.display_name)
                     );
                     return alias + suffix;
                 }
@@ -476,7 +508,7 @@ function autolinkChannelMentions(
     let output = text;
     output = output.replace(
         /\B(~([a-z0-9.\-_]*))/gi,
-        replaceChannelMentionWithToken,
+        replaceChannelMentionWithToken
     );
 
     return output;
@@ -500,7 +532,7 @@ const htmlEntities = {
 export function escapeHtml(text: string) {
     return text.replace(
         /[&<>"']/g,
-        (match: string) => htmlEntities[match as keyof (typeof htmlEntities)],
+        (match: string) => htmlEntities[match as keyof typeof htmlEntities]
     );
 }
 
@@ -516,7 +548,7 @@ export function convertEntityToCharacter(text: string) {
 function highlightCurrentMentions(
     text: string,
     tokens: Tokens,
-    mentionKeys: MentionKey[] = [],
+    mentionKeys: MentionKey[] = []
 ) {
     let output = text;
 
@@ -525,7 +557,11 @@ function highlightCurrentMentions(
     for (const [alias, token] of tokens) {
         const tokenTextLower = token.originalText.toLowerCase();
 
-        if (mentionKeys.findIndex((key) => key.key.toLowerCase() === tokenTextLower) !== -1) {
+        if (
+            mentionKeys.findIndex(
+                (key) => key.key.toLowerCase() === tokenTextLower
+            ) !== -1
+        ) {
             const index = tokens.size + newTokens.size;
             const newAlias = `$MM_SELFMENTION${index}$`;
 
@@ -547,7 +583,7 @@ function highlightCurrentMentions(
         fullMatch: string,
         prefix: string,
         mention: string,
-        suffix = '',
+        suffix = ''
     ) {
         const index = tokens.size;
         const alias = `$MM_SELFMENTION${index}$`;
@@ -577,7 +613,7 @@ function highlightCurrentMentions(
         } else {
             pattern = new RegExp(
                 `(^|\\W)(${escapeRegex(mention.key)})(\\b|_+\\b)`,
-                flags,
+                flags
             );
         }
         output = output.replace(pattern, replaceCurrentMentionWithToken);
@@ -586,10 +622,34 @@ function highlightCurrentMentions(
     return output;
 }
 
+interface Acronym {
+    Text: string;
+    Brief: string;
+    Definition: string;
+}
+
+function autolinkAcronyms(text: string, tokens: Tokens) {
+    const lookup = new Map<string, Acronym>([
+        [
+            'DOD',
+            {
+                Text: 'DOD',
+                Brief: 'Department Of Davids',
+                Definition: "Uncle Sam's Servants",
+            },
+        ],
+    ]);
+    const key = 'DOD';
+    const v = lookup.get(key) || {} as Acronym;
+    const acronymString = ` <Tooltip title="${v.Brief}" Arrow>${v.Text}<Button>${v.Definition}</Button></Tooltip>`;
+    tokens.set(key, {value: acronymString, originalText: key});
+    return text.replace(`\\W${key}\\W`, acronymString);
+}
+
 function autolinkHashtags(
     text: string,
     tokens: Tokens,
-    minimumHashtagLength = 3,
+    minimumHashtagLength = 3
 ) {
     let output = text;
 
@@ -618,7 +678,7 @@ function autolinkHashtags(
     function replaceHashtagWithToken(
         fullMatch: string,
         prefix: string,
-        originalText: string,
+        originalText: string
     ) {
         const index = tokens.size;
         const alias = `$MM_HASHTAG${index}$`;
@@ -639,7 +699,7 @@ function autolinkHashtags(
 
     return output.replace(
         XRegExp.cache('(^|\\W)(#\\pL[\\pL\\d\\-_.]*[\\pL\\d])', 'g'),
-        replaceHashtagWithToken,
+        replaceHashtagWithToken
     );
 }
 
@@ -682,20 +742,22 @@ export function parseSearchTerms(searchTerm: string) {
         }
 
         // capture any plain text up until the next quote or search flag
-        captured = (/^.+?(?=(?:\b|\B-)(?:in:|from:|channel:|on:|before:|after:)|"|$)/).exec(termString);
+        captured = (/^.+?(?=(?:\b|\B-)(?:in:|from:|channel:|on:|before:|after:)|"|$)/).exec(
+            termString
+        );
         if (captured) {
             termString = termString.substring(captured[0].length);
 
             // break the text up into words based on how the server splits them in SqlPostStore.SearchPosts and then discard empty terms
             terms.push(
-                ...captured[0].split(/[ <>+()~@]/).filter((term) => Boolean(term)),
+                ...captured[0].split(/[ <>+()~@]/).filter((term) => Boolean(term))
             );
             continue;
         }
 
         // we should never reach this point since at least one of the regexes should match something in the remaining text
         throw new Error(
-            'Infinite loop in search term parsing: "' + termString + '"',
+            'Infinite loop in search term parsing: "' + termString + '"'
         );
     }
 
@@ -735,7 +797,7 @@ function convertSearchTermToRegex(term: string): SearchPattern {
 export function highlightSearchTerms(
     text: string,
     tokens: Tokens,
-    searchPatterns: SearchPattern[],
+    searchPatterns: SearchPattern[]
 ) {
     if (!searchPatterns || searchPatterns.length === 0) {
         return text;
@@ -746,7 +808,7 @@ export function highlightSearchTerms(
     function replaceSearchTermWithToken(
         match: string,
         prefix: string,
-        word: string,
+        word: string
     ) {
         const index = tokens.size;
         const alias = `$MM_SEARCHTERM${index}$`;
@@ -776,8 +838,8 @@ export function highlightSearchTerms(
 
                 if (
                     alias.startsWith('$MM_HASHTAG') &&
-          alias.endsWith('$') &&
-          originalText.toLowerCase() !== term.toLowerCase()
+                    alias.endsWith('$') &&
+                    originalText.toLowerCase() !== term.toLowerCase()
                 ) {
                     continue;
                 }
@@ -828,7 +890,11 @@ function replaceNewlines(text: string) {
     return text.replace(/\n/g, ' ');
 }
 
-export function handleUnicodeEmoji(text: string, emojiMap: EmojiMap, searchPattern: RegExp) {
+export function handleUnicodeEmoji(
+    text: string,
+    emojiMap: EmojiMap,
+    searchPattern: RegExp
+) {
     let output = text;
 
     // replace all occurances of unicode emoji with additional markup
@@ -848,7 +914,9 @@ export function handleUnicodeEmoji(text: string, emojiMap: EmojiMap, searchPatte
             }
         }
 
-        const emojiCode = codePoints.map((codePoint) => codePoint.toString(16)).join('-');
+        const emojiCode = codePoints.
+            map((codePoint) => codePoint.toString(16)).
+            join('-');
 
         // convert emoji to image if supported, or wrap in span to apply appropriate formatting
         if (emojiMap.hasUnicode(emojiCode)) {
@@ -873,18 +941,21 @@ function fixedCharCodeAt(str: string, idx = 0) {
 
     // High surrogate (could change last hex to 0xDB7F to treat high
     // private surrogates as single characters)
-    if (code >= 0xD800 && code <= 0xDBFF) {
+    if (code >= 0xd800 && code <= 0xdbff) {
         const hi = code;
         const low = str.charCodeAt(idx + 1);
 
         if (isNaN(low)) {
-            console.log('High surrogate not followed by low surrogate in fixedCharCodeAt()'); // eslint-disable-line
+            console.log(
+                'High surrogate not followed by low surrogate in fixedCharCodeAt()'
+            ); // eslint-disable-line
         }
 
-        return ((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
+        return (hi - 0xd800) * 0x400 + (low - 0xdc00) + 0x10000;
     }
 
-    if (code >= 0xDC00 && code <= 0xDFFF) { // Low surrogate
+    if (code >= 0xdc00 && code <= 0xdfff) {
+        // Low surrogate
         // We return false to allow loops to skip this iteration since should have
         // already handled high surrogate above in the previous iteration
         return -1;
