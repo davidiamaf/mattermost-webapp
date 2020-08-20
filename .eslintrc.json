@@ -23,6 +23,7 @@
   },
   "rules": {
     "eol-last": ["error", "always"],
+    "quotes": "off",
     "import/no-unresolved": 2,
     "import/order": [
       "error",

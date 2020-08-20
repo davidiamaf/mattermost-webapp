@@ -5,6 +5,8 @@
 //@ts-ignore
 import XRegExp from 'xregexp';
 import emojiRegex from 'emoji-regex';
+import crypto from 'crypto';
+import {and} from 'bitwise-buffer';
 
 import {Renderer} from 'marked';
 
@@ -18,6 +20,7 @@ import * as Markdown from './markdown';
 import Constants from './constants';
 
 import EmojiMap from './emoji_map.js';
+import {AcronymBloom} from "../components/markdown/markdown";
 
 const punctuation = XRegExp.cache('[^\\pL\\d]');
 
@@ -29,16 +32,11 @@ const htmlEmojiPattern = /^<p>\s*(?:<img class="emoticon"[^>]*>|<span data-emoti
 // @mentions and ~channels to links by taking a user's message and returning a string of formatted html. Also takes
 // a number of options as part of the second parameter:
 export type ChannelNamesMap = {
-    [name: string]:
-    | {
-        display_name: string;
-        team_name?: string;
-    }
-    | Channel;
+    [name: string]: | { display_name: string; team_name?: string; } | Channel;
 };
 
 export type Tokens = Map<string,
-{ value: string; originalText: string; hashtag?: string }>;
+    { value: string; originalText: string; hashtag?: string }>;
 
 export type SearchPattern = {
     pattern: RegExp;
@@ -192,7 +190,8 @@ const cjkPattern = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-
 export function formatText(
     text: string,
     inputOptions: TextFormattingOptions = DEFAULT_OPTIONS,
-    emojiMap: EmojiMap
+    emojiMap: EmojiMap,
+    acronymBloom: AcronymBloom
 ) {
     if (!text || typeof text !== 'string') {
         return '';
@@ -207,11 +206,9 @@ export function formatText(
             convertSearchTermToRegex
         );
     } else {
-        options.searchPatterns = parseSearchTerms(options.searchTerm || '').
-            map(convertSearchTermToRegex).
-            sort((a, b) => {
-                return b.term.length - a.term.length;
-            });
+        options.searchPatterns = parseSearchTerms(options.searchTerm || '').map(convertSearchTermToRegex).sort((a, b) => {
+            return b.term.length - a.term.length;
+        });
     }
 
     if (options.renderer) {
@@ -276,7 +273,7 @@ export function doFormatText(
     output = autolinkEmails(output, tokens);
     output = autolinkHashtags(output, tokens, options.minimumHashtagLength);
 
-    output = autolinkAcronyms(output, tokens);
+    output = autolinkAcronyms(output, tokens, acronymBloom);
 
     if (!('emoticons' in options) || options.emoticons) {
         output = Emoticons.handleEmoticons(output, tokens);
@@ -537,12 +534,7 @@ export function escapeHtml(text: string) {
 }
 
 export function convertEntityToCharacter(text: string) {
-    return text.
-        replace(/&lt;/g, '<').
-        replace(/&gt;/g, '>').
-        replace(/&#39;/g, "'").
-        replace(/&quot;/g, '"').
-        replace(/&amp;/g, '&');
+    return text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 }
 
 function highlightCurrentMentions(
@@ -628,22 +620,44 @@ interface Acronym {
     Definition: string;
 }
 
-function autolinkAcronyms(text: string, tokens: Tokens) {
-    const lookup = new Map<string, Acronym>([
-        [
-            'DOD',
-            {
-                Text: 'DOD',
-                Brief: 'Department Of Davids',
-                Definition: "Uncle Sam's Servants",
-            },
-        ],
-    ]);
-    const key = 'DOD';
-    const v = lookup.get(key) || {} as Acronym;
-    const acronymString = ` <Tooltip title="${v.Brief}" Arrow>${v.Text}<Button>${v.Definition}</Button></Tooltip>`;
-    tokens.set(key, {value: acronymString, originalText: key});
-    return text.replace(`\\W${key}\\W`, acronymString);
+interface AcronymMatch {
+    key: string;
+    original: string;
+    Text: string;
+    Brief: string;
+    Definitions: string;
+}
+
+function hash(candidate: string) {
+    crypto.createHash('sha256').update(candidate).digest();
+}
+
+function bloomMaybe(filter: Buffer, candidate: string) {
+    const hashed = hash(candidate);
+    return and(hashed, filter(hash, filter)).compare(hashed) === 0;
+}
+
+function bloomMatch(candidate: string, bloom: AcronymBloom): AcronymMatch {
+    return {
+        match: bloomMaybe(bloom.bloom, candidate),
+        ...bloom.terms[candidate.toLowerCase()]
+    };
+}
+
+export static function autolinkAcronyms(text: string, tokens: Tokens, bloom: acronymBloom) {
+    const wordGroupMatcher = new RegExp(/\W(\w+)\W/);
+    const thisLine = wordGroupMatcher.exec(text);
+    thisLine.every((match) => {
+        const acronym = bloomMatch(match, bloom);
+        if (acronym.match) {
+            const acronymString = `<Tooltip title="${acronym.Definition}" arrow>${acronym.Text}<Button>${acronym.Brief}</Button></Tooltip>`;
+            tokens.set(acronym.key, {value: acronymString, originalText: acronym.original});
+
+            // text.replace(`\\W${key}\\W`, acronymString);
+        }
+        return tokens;
+    });
+    return text;
 }
 
 function autolinkHashtags(
@@ -914,9 +928,7 @@ export function handleUnicodeEmoji(
             }
         }
 
-        const emojiCode = codePoints.
-            map((codePoint) => codePoint.toString(16)).
-            join('-');
+        const emojiCode = codePoints.map((codePoint) => codePoint.toString(16)).join('-');
 
         // convert emoji to image if supported, or wrap in span to apply appropriate formatting
         if (emojiMap.hasUnicode(emojiCode)) {

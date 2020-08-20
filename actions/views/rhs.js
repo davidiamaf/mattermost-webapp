@@ -82,6 +82,13 @@ export function selectPostFromRightHandSideSearchByPostId(postId) {
     };
 }
 
+export function updateAcronymBloom(bloomData) {
+    return {
+        type: ActionTypes.UPDATE_ACRONYM_BLOOM,
+        bloomData,
+    };
+}
+
 export function updateSearchTerms(terms) {
     return {
         type: ActionTypes.UPDATE_RHS_SEARCH_TERMS,

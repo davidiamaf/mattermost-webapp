@@ -101,11 +101,27 @@ type Props = {
     emojiMap: EmojiMap;
 }
 
+export interface AcronymData {
+    key: string;
+    Text: string;
+    Brief: string;
+    Definition: string;
+}
+
+export interface AcronymBloom {
+    bloom: string;
+    terms: { [key: string]: AcronymData };
+}
+
 export default class Markdown extends React.PureComponent<Props> {
     static defaultProps: Partial<Props> = {
         options: {},
         isRHS: false,
         proxyImages: true,
+        acronymBloom: {
+            bloom: Buffer.from("fc99459c7aa02481042852e5093ef8683cf9c763f2c505b39869176fdf7ea8ff", 'hex'),
+            terms: {dod: {key: "dod", Text: "DOD", Brief: "Department Of Davids", Definition: "Uncle Sam's Servants"}}
+        },
         imagesMetadata: {},
         postId: '', // Needed to avoid proptypes console errors for cases like channel header, which doesn't have a proper value
     }
@@ -121,12 +137,13 @@ export default class Markdown extends React.PureComponent<Props> {
             mentionKeys: this.props.mentionKeys,
             atMentions: true,
             channelNamesMap: this.props.channelNamesMap,
+            acronymBloom: this.props.acronymBloom,
             proxyImages: this.props.hasImageProxy && this.props.proxyImages,
             team: this.props.team,
             minimumHashtagLength: this.props.minimumHashtagLength,
         }, this.props.options);
 
-        const htmlFormattedText = formatText(this.props.message, options, this.props.emojiMap);
+        const htmlFormattedText = formatText(this.props.message, options, this.props.emojiMap, this.props.acronymBloom);
         return messageHtmlToComponent(htmlFormattedText, this.props.isRHS, {
             imageProps: this.props.imageProps,
             imagesMetadata: this.props.imagesMetadata,
