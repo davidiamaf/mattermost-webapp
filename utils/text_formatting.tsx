@@ -36,8 +36,7 @@ export type ChannelNamesMap = {
     [name: string]: { display_name: string; team_name?: string } | Channel;
 };
 
-export type Tokens = Map<string,
-    { value: string; originalText: string; hashtag?: string }>;
+export type Tokens = Map<string, { value: string; originalText: string; hashtag?: string }>;
 
 export type SearchPattern = {
     pattern: RegExp;
@@ -56,6 +55,7 @@ export type Team = {
 };
 
 interface TextFormattingOptionsBase {
+
     /**
      * If specified, this word is highlighted in the resulting html.
      *
@@ -191,8 +191,7 @@ export function formatText(
     text: string,
     inputOptions: TextFormattingOptions = DEFAULT_OPTIONS,
     emojiMap: EmojiMap,
-    acronymBloom: AcronymBloom =
-    {bloom: Buffer.from([0]), terms: new Map<string, AcronymData>()}) {
+    acronymBloom: AcronymBloom = {bloom: Buffer.from([0]), terms: new Map<string, AcronymData>()}) {
     if (!text || typeof text !== "string") {
         return "";
     }
@@ -212,7 +211,6 @@ export function formatText(
     }
 
     if (options.renderer) {
-
         output = formatWithRenderer(output, options.renderer);
         output = doFormatText(output, options, emojiMap, acronymBloom);
     } else if (!("markdown" in options) || options.markdown) {
@@ -224,9 +222,9 @@ export function formatText(
              ** which allows markdown images to open preview window
              */
             const replacer = (match: string) => {
-                return match === "<p>"
-                    ? '<div className="markdown-inline-img__container">'
-                    : "</div>";
+                return match === "<p>" ?
+                    '<div className="markdown-inline-img__container">' :
+                    "</div>";
             };
             output = output.replace(/<p>|<\/p>/g, replacer);
         }
@@ -536,12 +534,7 @@ export function escapeHtml(text: string) {
 }
 
 export function convertEntityToCharacter(text: string) {
-    return text
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&#39;/g, "'")
-        .replace(/&quot;/g, '"')
-        .replace(/&amp;/g, "&");
+    return text.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
 }
 
 function highlightCurrentMentions(
@@ -648,10 +641,6 @@ function getAcronym(bloom: AcronymBloom, key: string): AcronymData | undefined {
     return bloom.terms.get(key.toLowerCase());
 }
 
-export function acronymExpanded(acronym: AcronymData, original: string): string {
-    return `<span class="tooltip-parent" title="${acronym.Brief}">${original} <span class="tooltip-text"><span class="text">${acronym.Text}</span> <span class="brief">${acronym.Brief}</span> <span class="definition">${acronym.Definition}</span></span></span>`;
-}
-
 export function autolinkAcronyms(
     text: string,
     tokens: Tokens,
@@ -664,22 +653,34 @@ export function autolinkAcronyms(
     let output = text;
     let thisWord = wordGroupMatcher.exec(text);
     do {
-        thisWord?.every((match) => {
-            // The Cheap
-            if (bloomMaybe(bloom.bloom, match)) {
-                // The expensive
-                const acronym = getAcronym(bloom, match);
-                if (acronym) {
-                    const newAlias = `$MM_ACRONYM${acronym.key}$`;
-                    const tokenValue = {value: acronymExpanded(acronym, match), originalText: match};
-                    tokens.set(newAlias, tokenValue);
-                    output = output.replace(new RegExp('(?<=^|\\s+|\\W|_*)' + match + '(?=\\s+|_*|\\W|$)', "g"), newAlias);
-                }
+        output = thisWord === null ? output : thisWord.filter((match) => bloomMaybe(bloom.bloom, match)).map((match) => {
+            const acronym = getAcronym(bloom, match);
+            if (acronym) {
+                const newAlias = `$MM_ACRONYM${acronym.key}$`;
+                const tokenValue = {value: acronymExpanded(acronym, match), originalText: match};
+                tokens.set(newAlias, tokenValue);
+                return [match, newAlias];
             }
-        });
+            return [];
+        }).filter(([a, b]) => a && b).reduce((prev, [match, newAlias]) => prev.replace(new RegExp('(?<=^|\\s+|\\W|_*)' + match + '(?=\\s+|_*|\\W|$)', "g"), newAlias), output);
         thisWord = wordGroupMatcher.exec(text);
     } while (thisWord);
     return output;
+}
+
+function acronymExpanded(acronym: AcronymData, original: string): string {
+    return (
+        `<span
+            className='tooltip-parent'
+            title='${acronym.Brief}'
+        >${original}
+            <span className='tooltip-text'>
+                <span className='text'>${acronym.Text}</span>
+                <span className='brief'>${acronym.Brief}</span>
+                <span className='definition'>${acronym.Definition}</span>
+            </span>
+        </span>
+    `);
 }
 
 function autolinkHashtags(
@@ -751,7 +752,7 @@ export function parseSearchTerms(searchTerm: string) {
         let captured;
 
         // check for a quoted string
-        captured = /^"([^"]*)"/.exec(termString);
+        captured = (/^"([^"]*)"/).exec(termString);
         if (captured) {
             termString = termString.substring(captured[0].length);
 
@@ -762,14 +763,14 @@ export function parseSearchTerms(searchTerm: string) {
         }
 
         // check for a search flag (and don't add it to terms)
-        captured = /^-?(?:in|from|channel|on|before|after): ?\S+/.exec(termString);
+        captured = (/^-?(?:in|from|channel|on|before|after): ?\S+/).exec(termString);
         if (captured) {
             termString = termString.substring(captured[0].length);
             continue;
         }
 
         // capture at mentions differently from the server so we can highlight them with the preceeding at sign
-        captured = /^@[a-z0-9.-_]+\b/.exec(termString);
+        captured = (/^@[a-z0-9.-_]+\b/).exec(termString);
         if (captured) {
             termString = termString.substring(captured[0].length);
 
@@ -778,7 +779,7 @@ export function parseSearchTerms(searchTerm: string) {
         }
 
         // capture any plain text up until the next quote or search flag
-        captured = /^.+?(?=(?:\b|\B-)(?:in:|from:|channel:|on:|before:|after:)|"|$)/.exec(
+        captured = (/^.+?(?=(?:\b|\B-)(?:in:|from:|channel:|on:|before:|after:)|"|$)/).exec(
             termString
         );
         if (captured) {
@@ -815,7 +816,7 @@ function convertSearchTermToRegex(term: string): SearchPattern {
     if (cjkPattern.test(term)) {
         // term contains Chinese, Japanese, or Korean characters so don't mark word boundaries
         pattern = "()(" + escapeRegex(term.replace(/\*/g, "")) + ")";
-    } else if (/[^\s][*]$/.test(term)) {
+    } else if ((/[^\s][*]$/).test(term)) {
         pattern = "\\b()(" + escapeRegex(term.substring(0, term.length - 1)) + ")";
     } else if (term.startsWith("@") || term.startsWith("#")) {
         // needs special handling of the first boundary because a word boundary doesn't work before a symbol
@@ -950,9 +951,7 @@ export function handleUnicodeEmoji(
             }
         }
 
-        const emojiCode = codePoints
-            .map((codePoint) => codePoint.toString(16))
-            .join("-");
+        const emojiCode = codePoints.map((codePoint) => codePoint.toString(16)).join("-");
 
         // convert emoji to image if supported, or wrap in span to apply appropriate formatting
         if (emojiMap.hasUnicode(emojiCode)) {
