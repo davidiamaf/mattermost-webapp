@@ -16,10 +16,11 @@ export type DraggingState = {
 }
 
 export interface AcronymData {
-    key: string;
+    key?: string;
     Text: string;
     Brief: string;
-    Definition: string;
+    Definition?: string;
+    Type?: string;
 }
 
 export interface AcronymBloom {

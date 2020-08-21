@@ -191,29 +191,28 @@ export function formatText(
     text: string,
     inputOptions: TextFormattingOptions = DEFAULT_OPTIONS,
     emojiMap: EmojiMap,
-    acronymBloom: AcronymBloom
-) {
+    acronymBloom: AcronymBloom =
+    {bloom: Buffer.from([0]), terms: new Map<string, AcronymData>()}) {
     if (!text || typeof text !== "string") {
         return "";
     }
 
     let output = text;
     const options = Object.assign({}, inputOptions);
-    const hasPhrases = /"([^"]*)"/.test(options.searchTerm || "");
+    const hasPhrases = (/"([^"]*)"/).test(options.searchTerm || "");
 
     if (options.searchMatches && !hasPhrases) {
         options.searchPatterns = options.searchMatches.map(
             convertSearchTermToRegex
         );
     } else {
-        options.searchPatterns = parseSearchTerms(options.searchTerm || "")
-            .map(convertSearchTermToRegex)
-            .sort((a, b) => {
-                return b.term.length - a.term.length;
-            });
+        options.searchPatterns = parseSearchTerms(options.searchTerm || "").map(convertSearchTermToRegex).sort((a, b) => {
+            return b.term.length - a.term.length;
+        });
     }
 
     if (options.renderer) {
+
         output = formatWithRenderer(output, options.renderer);
         output = doFormatText(output, options, emojiMap, acronymBloom);
     } else if (!("markdown" in options) || options.markdown) {

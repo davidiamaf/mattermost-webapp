@@ -291,8 +291,8 @@ export default class Renderer extends marked.Renderer {
         return `<li><span>${text}</span></li>`;
     }
 
-
     public text(txt: string) {
+        console.log("formatting text", txt);
         return TextFormatting.doFormatText(
             txt,
             this.formattingOptions,
