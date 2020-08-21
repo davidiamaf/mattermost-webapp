@@ -28,9 +28,7 @@ import PostEmoji from 'components/post_emoji';
  * - hasPluginTooltips - If specified, the LinkTooltip component is placed inside links. Defaults to false.
  */
 
-
-export function messageHtmlToComponent(html, isRHS, options = {
-}) {
+export function messageHtmlToComponent(html, isRHS, options = {}) {
     if (!html) {
         return null;
     }
@@ -83,18 +81,17 @@ export function messageHtmlToComponent(html, isRHS, options = {
             shouldProcessNode: (node) => node.type === 'tag' && node.name === 'acronym-tooltip',
             processNode: (node, children) => {
                 const acronym = node.attribs[acronymKey];
-
-                const renderTooltip = (props) => (
-                    <Tooltip {...props}>{acronym}</Tooltip>
-                );
+                const data = options.acronymData.terms.get(acronym);
+                const renderTooltip =
+                    (
+                        <Tooltip id={"acronymOverlayId"}>{data.Definition}</Tooltip>
+                    );
                 return (
                     <OverlayTrigger
                         placement='top'
                         acronymData={options.acronymData.terms.get(acronym)}
                         overlay={renderTooltip}
-                    >
-                        {children} {'I\'m rendering something else!'}
-                    </OverlayTrigger>
+                    ><span title={data.Brief}>{children}</span></OverlayTrigger>
                 );
             },
         });

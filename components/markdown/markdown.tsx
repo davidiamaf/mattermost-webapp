@@ -11,7 +11,7 @@ import {buffer} from "bitwise";
 
 import messageHtmlToComponent from 'utils/message_html_to_component';
 import EmojiMap from 'utils/emoji_map';
-import {ChannelNamesMap, TextFormattingOptions, formatText, MentionKey, AcronymData} from 'utils/text_formatting';
+import {ChannelNamesMap, TextFormattingOptions, formatText, MentionKey} from 'utils/text_formatting';
 
 import {AcronymBloom, AcronymData} from "../../types/store";
 
@@ -325,7 +325,6 @@ export default class Markdown extends React.PureComponent<Props> {
             proxyImages: this.props.hasImageProxy && this.props.proxyImages,
             team: this.props.team,
             minimumHashtagLength: this.props.minimumHashtagLength,
-            acronymData: this.props.acronymData
         }, this.props.options);
 
         const htmlFormattedText = formatText(this.props.message, options, this.props.emojiMap, this.props.acronymBloom);
@@ -337,7 +336,7 @@ export default class Markdown extends React.PureComponent<Props> {
             postType: this.props.postType,
             mentionHighlight: this.props.options.mentionHighlight,
             disableGroupHighlight: this.props.options.disableGroupHighlight,
-            acronymData: this.props.acronymData,
+            acronymData: this.props.acronymBloom,
         });
     }
 }
