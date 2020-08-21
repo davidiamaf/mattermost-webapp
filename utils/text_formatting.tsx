@@ -652,11 +652,12 @@ export function autolinkAcronyms(
     const wordGroupMatcher = new RegExp(/(?<=^|\s+|\W|_*)([a-zA-Z0-9]+)(?=\s+|_*|\W|$)/g);
     let output = text;
     let thisWord = wordGroupMatcher.exec(text);
+    let incrementerIndex = 0;
     do {
         output = thisWord === null ? output : thisWord.filter((match) => bloomMaybe(bloom.bloom, match)).map((match) => {
             const acronym = getAcronym(bloom, match);
             if (acronym) {
-                const newAlias = `$MM_ACRONYM${acronym.key}$`;
+                const newAlias = `$MM_ACRONYM${incrementerIndex++}$`;
                 const tokenValue = {value: acronymExpanded(acronym, match), originalText: match};
                 tokens.set(newAlias, tokenValue);
                 return [match, newAlias];
@@ -668,7 +669,13 @@ export function autolinkAcronyms(
     return output;
 }
 
-function acronymExpanded(acronym: AcronymData, original: string): string {
+export function acronymExpanded(acronym: AcronymData, original: string): string {
+    return (
+        `<span title="${acronym.Brief}">${original}</span>`
+    );
+}
+
+export function aacronymExpanded(acronym: AcronymData, original: string): string {
     return (
         `<span
             className='tooltip-parent'

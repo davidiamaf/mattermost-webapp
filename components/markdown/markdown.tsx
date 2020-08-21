@@ -3,6 +3,7 @@
 
 import React from 'react';
 
+import {x64} from "murmurhash3js";
 import {Team} from 'mattermost-redux/types/teams';
 import {PostImage, PostType} from 'mattermost-redux/types/posts';
 import {Dictionary} from 'mattermost-redux/types/utilities';
@@ -119,7 +120,7 @@ export function calculateBloom<T>(termToKey: (p0: T) => string, terms: Bloomable
 }
 
 const key609 = "609";
-const acronymBloom = calculateBloom((term: AcronymData) => term.Text, {
+const acronymBloom = calculateBloom((term: AcronymData) => term.Text.toLowerCase(), {
     dod: {
         Text: "DOD",
         Brief: "Department Of Davids",

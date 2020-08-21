@@ -16,9 +16,8 @@ import {
 } from 'utils/text_formatting';
 import LinkOnlyRenderer from 'utils/markdown/link_only_renderer';
 
-import {calculateBloom} from "../stores/redux_store";
-
 import {acronymExpanded, bloomMaybe} from "./text_formatting";
+import {calculateBloom} from "../components/markdown/markdown";
 
 describe('formatText', () => {
     test('jumbo emoji should be able to handle up to 3 spaces before the emoji character', () => {
@@ -35,7 +34,7 @@ describe('formatText', () => {
 
 describe("BloomOperation", () => {
     it("can find the thing", () => {
-        const bloom = calculateBloom({
+        const bloom = calculateBloom((term) => term.Text.toLowerCase(), {
             dod: {
                 Text: "DOD",
                 Brief: "$BRIEF0$$",
@@ -55,7 +54,7 @@ describe('autolinkAcronyms', () => {
         'AOC',
         'AdCP',
     ];
-    const bloom = calculateBloom({
+    const bloom = calculateBloom((term) => term.Text.toLowerCase(), {
         dod: {
             Text: "DOD",
             Brief: "$BRIEF0$$",
