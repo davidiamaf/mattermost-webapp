@@ -1,12 +1,12 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import { batchActions } from "redux-batched-actions";
+import {batchActions} from "redux-batched-actions";
 import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
 import * as PostActions from "mattermost-redux/actions/posts";
 import * as SearchActions from "mattermost-redux/actions/search";
-import { SearchTypes } from "mattermost-redux/action_types";
+import {SearchTypes} from "mattermost-redux/action_types";
 
 import {
     updateRhsState,
@@ -27,9 +27,9 @@ import {
     closeMenu,
     openAtPrevious,
 } from "actions/views/rhs";
-import { trackEvent } from "actions/diagnostics_actions.jsx";
-import { ActionTypes, RHSStates } from "utils/constants";
-import { getBrowserUtcOffset } from "utils/timezone.jsx";
+import {trackEvent} from "actions/diagnostics_actions.jsx";
+import {ActionTypes, RHSStates} from "utils/constants";
+import {getBrowserUtcOffset} from "utils/timezone.jsx";
 
 const mockStore = configureStore([thunk]);
 
@@ -45,10 +45,10 @@ const previousSelectedPost = {
 
 const UserSelectors = require("mattermost-redux/selectors/entities/users");
 UserSelectors.getCurrentUserMentionKeys = jest.fn(() => [
-    { key: "@here" },
-    { key: "@mattermost" },
-    { key: "@channel" },
-    { key: "@all" },
+    {key: "@here"},
+    {key: "@mattermost"},
+    {key: "@channel"},
+    {key: "@all"},
 ]);
 
 // Mock Date.now() to return a constant value.
@@ -56,7 +56,7 @@ const POST_CREATED_TIME = Date.now();
 global.Date.now = jest.fn(() => POST_CREATED_TIME);
 
 jest.mock("mattermost-redux/actions/posts", () => ({
-    getPostThread: (...args) => ({ type: "MOCK_GET_POST_THREAD", args }),
+    getPostThread: (...args) => ({type: "MOCK_GET_POST_THREAD", args}),
     getProfilesAndStatusesForPosts: (...args) => ({
         type: "MOCK_GET_PROFILES_AND_STATUSES_FOR_POSTS",
         args,
@@ -64,8 +64,8 @@ jest.mock("mattermost-redux/actions/posts", () => ({
 }));
 
 jest.mock("mattermost-redux/actions/search", () => ({
-    searchPostsWithParams: (...args) => ({ type: "MOCK_SEARCH_POSTS", args }),
-    clearSearch: (...args) => ({ type: "MOCK_CLEAR_SEARCH", args }),
+    searchPostsWithParams: (...args) => ({type: "MOCK_SEARCH_POSTS", args}),
+    clearSearch: (...args) => ({type: "MOCK_CLEAR_SEARCH", args}),
     getFlaggedPosts: jest.fn(),
     getPinnedPosts: jest.fn(),
 }));
@@ -105,7 +105,7 @@ describe("rhs view actions", () => {
                     [previousSelectedPost.id]: previousSelectedPost,
                 },
             },
-            preferences: { myPreferences: {} },
+            preferences: {myPreferences: {}},
         },
         views: {
             rhs: {
@@ -179,8 +179,13 @@ describe("rhs view actions", () => {
     describe("updateAcronymBloom", () => {
         test(`it dispatches ${ActionTypes.UPDATE_ACRONYM_BLOOM} correctly`, () => {
             const bloom = {
-                bloomFilter: "ABCDEF123456789",
-                terms: { DOD: "Department of Davids" },
+                bloom: Buffer.from("fc99459c7aa02481042852e5093ef8683cf9c763f2c505b39869176fdf7ea8ff", 'hex'),
+                terms: new Map([["dod", {
+                    key: "dod",
+                    Text: "DOD",
+                    Brief: "Department Of Davids",
+                    Definition: "Uncle Sam's Servants"
+                }]]),
             };
 
             store.dispatch(updateAcronymBloom(bloom));
@@ -230,8 +235,8 @@ describe("rhs view actions", () => {
                         page: 0,
                         per_page: 20,
                     },
-                    true
-                )
+                    true,
+                ),
             );
 
             expect(store.getActions()).toEqual(compareStore.getActions());
@@ -248,8 +253,8 @@ describe("rhs view actions", () => {
                         page: 0,
                         per_page: 20,
                     },
-                    true
-                )
+                    true,
+                ),
             );
 
             expect(store.getActions()).toEqual(compareStore.getActions());
@@ -288,9 +293,9 @@ describe("rhs view actions", () => {
     describe("showFlaggedPosts", () => {
         test("it dispatches the right actions", async () => {
             SearchActions.getFlaggedPosts.mockReturnValue((dispatch) => {
-                dispatch({ type: "MOCK_GET_FLAGGED_POSTS" });
+                dispatch({type: "MOCK_GET_FLAGGED_POSTS"});
 
-                return { data: "data" };
+                return {data: "data"};
             });
 
             await store.dispatch(showFlaggedPosts());
@@ -332,15 +337,15 @@ describe("rhs view actions", () => {
     describe("showPinnedPosts", () => {
         test("it dispatches the right actions for the current channel", async () => {
             SearchActions.getPinnedPosts.mockReturnValue((dispatch) => {
-                dispatch({ type: "MOCK_GET_PINNED_POSTS" });
+                dispatch({type: "MOCK_GET_PINNED_POSTS"});
 
-                return { data: "data" };
+                return {data: "data"};
             });
 
             await store.dispatch(showPinnedPosts());
 
             expect(SearchActions.getPinnedPosts).toHaveBeenCalledWith(
-                currentChannelId
+                currentChannelId,
             );
 
             expect(store.getActions()).toEqual([
@@ -387,15 +392,15 @@ describe("rhs view actions", () => {
             const channelId = "channel1";
 
             SearchActions.getPinnedPosts.mockReturnValue((dispatch) => {
-                dispatch({ type: "MOCK_GET_PINNED_POSTS" });
+                dispatch({type: "MOCK_GET_PINNED_POSTS"});
 
-                return { data: "data" };
+                return {data: "data"};
             });
 
             await store.dispatch(showPinnedPosts(channelId));
 
             expect(SearchActions.getPinnedPosts).toHaveBeenCalledWith(
-                channelId
+                channelId,
             );
 
             expect(store.getActions()).toEqual([
@@ -456,7 +461,7 @@ describe("rhs view actions", () => {
                         type: ActionTypes.UPDATE_RHS_STATE,
                         state: RHSStates.MENTION,
                     },
-                ])
+                ]),
             );
 
             expect(store.getActions()).toEqual(compareStore.getActions());
@@ -471,7 +476,7 @@ describe("rhs view actions", () => {
 
             expect(trackEvent.mock.calls[0][0]).toEqual("api");
             expect(trackEvent.mock.calls[0][1]).toEqual(
-                "api_posts_search_mention"
+                "api_posts_search_mention",
             );
         });
     });
@@ -493,7 +498,7 @@ describe("rhs view actions", () => {
                         channelId: "",
                         timestamp: 0,
                     },
-                ])
+                ]),
             );
 
             expect(store.getActions()).toEqual(compareStore.getActions());
@@ -669,7 +674,7 @@ describe("rhs view actions", () => {
         });
 
         it("opens a mention search", () => {
-            store.dispatch(openAtPrevious({ isMentionSearch: true }));
+            store.dispatch(openAtPrevious({isMentionSearch: true}));
             const compareStore = mockStore(initialState);
 
             compareStore.dispatch(performSearch("@mattermost ", true));
@@ -683,7 +688,7 @@ describe("rhs view actions", () => {
                         type: ActionTypes.UPDATE_RHS_STATE,
                         state: RHSStates.MENTION,
                     },
-                ])
+                ]),
             );
 
             expect(store.getActions()).toEqual(compareStore.getActions());
@@ -691,14 +696,14 @@ describe("rhs view actions", () => {
 
         it("opens pinned posts", async () => {
             SearchActions.getPinnedPosts.mockReturnValue((dispatch) => {
-                dispatch({ type: "MOCK_GET_PINNED_POSTS" });
-                return { data: "data" };
+                dispatch({type: "MOCK_GET_PINNED_POSTS"});
+                return {data: "data"};
             });
 
-            await store.dispatch(openAtPrevious({ isPinnedPosts: true }));
+            await store.dispatch(openAtPrevious({isPinnedPosts: true}));
 
             expect(SearchActions.getPinnedPosts).toHaveBeenCalledWith(
-                currentChannelId
+                currentChannelId,
             );
 
             expect(store.getActions()).toEqual([
@@ -724,12 +729,12 @@ describe("rhs view actions", () => {
 
         it("opens flagged posts", async () => {
             SearchActions.getFlaggedPosts.mockReturnValue((dispatch) => {
-                dispatch({ type: "MOCK_GET_FLAGGED_POSTS" });
+                dispatch({type: "MOCK_GET_FLAGGED_POSTS"});
 
-                return { data: "data" };
+                return {data: "data"};
             });
 
-            await store.dispatch(openAtPrevious({ isFlaggedPosts: true }));
+            await store.dispatch(openAtPrevious({isFlaggedPosts: true}));
 
             expect(SearchActions.getFlaggedPosts).toHaveBeenCalled();
 
@@ -751,12 +756,12 @@ describe("rhs view actions", () => {
                 openAtPrevious({
                     selectedPostId: previousSelectedPost.id,
                     previousRhsState: previousState,
-                })
+                }),
             );
 
             const compareStore = mockStore(initialState);
             compareStore.dispatch(
-                PostActions.getPostThread(previousSelectedPost.root_id)
+                PostActions.getPostThread(previousSelectedPost.root_id),
             );
             compareStore.dispatch({
                 type: ActionTypes.SELECT_POST,
@@ -770,7 +775,7 @@ describe("rhs view actions", () => {
         });
 
         it("opens empty search when selected post does not exist", async () => {
-            await store.dispatch(openAtPrevious({ selectedPostId: "postxyz" }));
+            await store.dispatch(openAtPrevious({selectedPostId: "postxyz"}));
 
             expect(store.getActions()).toEqual(actionsForEmptySearch());
         });
@@ -781,7 +786,7 @@ describe("rhs view actions", () => {
                 openAtPrevious({
                     selectedPostCardId: previousSelectedPost.id,
                     previousRhsState: previousState,
-                })
+                }),
             );
 
             const compareStore = mockStore(initialState);
@@ -797,7 +802,7 @@ describe("rhs view actions", () => {
 
         it("opens empty search when selected post card does not exist", async () => {
             await store.dispatch(
-                openAtPrevious({ selectedPostCardId: "postxyz" })
+                openAtPrevious({selectedPostCardId: "postxyz"}),
             );
 
             expect(store.getActions()).toEqual(actionsForEmptySearch());
@@ -816,7 +821,7 @@ describe("rhs view actions", () => {
             };
 
             store = mockStore(searchInitialState);
-            await store.dispatch(openAtPrevious({ searchVisible: true }));
+            await store.dispatch(openAtPrevious({searchVisible: true}));
 
             const compareStore = mockStore(searchInitialState);
             compareStore.dispatch(updateRhsState(RHSStates.SEARCH));

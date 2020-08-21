@@ -120,6 +120,11 @@ export function calculateBloom<T>(termToKey: (p0: T) => string, terms: Bloomable
 
 const key609 = "609";
 const acronymBloom = calculateBloom((term: AcronymData) => term.Text, {
+    dod: {
+        Text: "DOD",
+        Brief: "Department Of Davids",
+        Definition: "Uncle Sam's Servants"
+    },
     mdi: {
         Text: 'MDI',
         Brief: 'Mission Data Integration',
