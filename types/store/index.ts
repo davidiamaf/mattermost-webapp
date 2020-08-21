@@ -15,11 +15,25 @@ export type DraggingState = {
     id?: string;
 }
 
+export interface AcronymData {
+    key: string;
+    Text: string;
+    Brief: string;
+    Definition: string;
+}
+
+export interface AcronymBloom {
+    bloom: Buffer;
+    terms: Map<string, AcronymData>;
+}
+
 export type GlobalState = BaseGlobalState & {
     plugins: PluginsState;
     storage: {
-        storage: {[key: string]: any};
+        storage: { [key: string]: any };
     };
+
+    acronymBloom: AcronymBloom;
 
     views: {
         admin: {
@@ -125,8 +139,8 @@ export type GlobalState = BaseGlobalState & {
 
         marketplace: {
             plugins: MarketplacePlugin[];
-            installing: {[pluginId: string]: boolean};
-            errors: {[pluginId: string]: string};
+            installing: { [pluginId: string]: boolean };
+            errors: { [pluginId: string]: string };
             filter: string;
         };
 

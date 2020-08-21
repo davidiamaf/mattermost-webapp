@@ -21,6 +21,10 @@ export function getSelectedPostFocussedAt(state: GlobalState): number {
     return state.views.rhs.selectedPostFocussedAt;
 }
 
+export function getAcronymBloom(state: GlobalState) {
+    return state.acronymBloom
+}
+
 export function getSelectedPostCardId(state: GlobalState): $ID<Post> {
     return state.views.rhs.selectedPostCardId;
 }

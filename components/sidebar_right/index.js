@@ -9,7 +9,14 @@ import {
     getCurrentChannel,
 } from 'mattermost-redux/selectors/entities/channels';
 
-import {setRhsExpanded, showPinnedPosts, openRHSSearch, closeRightHandSide, openAtPrevious, updateSearchTerms} from 'actions/views/rhs';
+import {
+    setRhsExpanded,
+    showPinnedPosts,
+    openRHSSearch,
+    closeRightHandSide,
+    openAtPrevious,
+    updateSearchTerms,
+} from 'actions/views/rhs';
 import {
     getIsRhsExpanded,
     getIsRhsOpen,

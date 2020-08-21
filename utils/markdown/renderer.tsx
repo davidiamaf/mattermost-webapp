@@ -12,10 +12,13 @@ import EmojiMap from 'utils/emoji_map';
 export default class Renderer extends marked.Renderer {
     private formattingOptions: TextFormatting.TextFormattingOptions;
     private emojiMap: EmojiMap;
+    private acronymBloom: AcronymBloom;
+
     public constructor(
         options: MarkedOptions,
         formattingOptions = {},
         emojiMap = new EmojiMap(new Map()),
+        acronymBloom: AcronymBloom,
     ) {
         super(options);
 
@@ -23,6 +26,7 @@ export default class Renderer extends marked.Renderer {
         this.paragraph = this.paragraph.bind(this);
         this.text = this.text.bind(this);
         this.emojiMap = emojiMap;
+        this.acronymBloom = acronymBloom;
 
         this.formattingOptions = formattingOptions;
     }
@@ -57,7 +61,7 @@ export default class Renderer extends marked.Renderer {
         if (SyntaxHighlighting.canHighlight(usedLanguage)) {
             header = (
                 '<span class="post-code__language">' +
-                    SyntaxHighlighting.getLanguageName(usedLanguage) +
+                SyntaxHighlighting.getLanguageName(usedLanguage) +
                 '</span>'
             );
         }
@@ -83,7 +87,7 @@ export default class Renderer extends marked.Renderer {
 
                 searchedContent = (
                     '<div class="post-code__search-highlighting">' +
-                        searched +
+                    searched +
                     '</div>'
                 );
             }
@@ -91,11 +95,11 @@ export default class Renderer extends marked.Renderer {
 
         return (
             '<div class="' + className + '">' +
-                header +
-                '<code class="' + codeClassName + '">' +
-                    searchedContent +
-                    content +
-                '</code>' +
+            header +
+            '<code class="' + codeClassName + '">' +
+            searchedContent +
+            content +
+            '</code>' +
             '</div>'
         );
     }
@@ -115,9 +119,9 @@ export default class Renderer extends marked.Renderer {
 
         return (
             '<span class="codespan__pre-wrap">' +
-                '<code>' +
-                    output +
-                '</code>' +
+            '<code>' +
+            output +
+            '</code>' +
             '</span>'
         );
     }
@@ -173,9 +177,9 @@ export default class Renderer extends marked.Renderer {
                 outHref = `http://${outHref}`;
             } else if (isUrl && this.formattingOptions.autolinkedUrlSchemes) {
                 const isValidUrl =
-          this.formattingOptions.autolinkedUrlSchemes.indexOf(
-              scheme.toLowerCase(),
-          ) !== -1;
+                    this.formattingOptions.autolinkedUrlSchemes.indexOf(
+                        scheme.toLowerCase(),
+                    ) !== -1;
 
                 if (!isValidUrl) {
                     return text;
@@ -278,8 +282,8 @@ export default class Renderer extends marked.Renderer {
 
         if (isTaskList) {
             return `<li class="list-item--task-list">${'<input type="checkbox" disabled="disabled" ' +
-        (isTaskList[1] === ' ' ? '' : 'checked="checked" ') +
-        '/> '}${text.replace(taskListReg, '')}</li>`;
+            (isTaskList[1] === ' ' ? '' : 'checked="checked" ') +
+            '/> '}${text.replace(taskListReg, '')}</li>`;
         }
 
         // Added a span because if not whitespace nodes only
@@ -287,11 +291,13 @@ export default class Renderer extends marked.Renderer {
         return `<li><span>${text}</span></li>`;
     }
 
+
     public text(txt: string) {
         return TextFormatting.doFormatText(
             txt,
             this.formattingOptions,
             this.emojiMap,
+            this.acronymBloom,
         );
     }
 }

@@ -9,12 +9,14 @@ import RemoveMarkdown from 'utils/markdown/remove_markdown';
 
 import EmojiMap from 'utils/emoji_map';
 
+import {AcronymBloom} from "../../types/store";
+
 import Renderer from './renderer';
 
 const removeMarkdown = new RemoveMarkdown();
 
-export function format(text: string, options = {}, emojiMap: EmojiMap) {
-    return formatWithRenderer(text, new Renderer({}, options, emojiMap));
+export function format(text: string, options = {}, emojiMap: EmojiMap, acronymBloom?: AcronymBloom) {
+    return formatWithRenderer(text, new Renderer({}, options, emojiMap, acronymBloom));
 }
 
 export function formatWithRenderer(text: string, renderer: marked.Renderer) {

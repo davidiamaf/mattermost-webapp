@@ -30,14 +30,9 @@ const usersSetTransform = [
     'profilesNotInTeam',
 ];
 
-const teamSetTransform = [
-    'membersInTeam',
-];
+const teamSetTransform = ['membersInTeam'];
 
-const setTransforms = [
-    ...usersSetTransform,
-    ...teamSetTransform,
-];
+const setTransforms = [...usersSetTransform, ...teamSetTransform];
 
 // This is a hack to get the whitelist to work with our storage keys
 // We will implement it properly when we eventually upgrade redux-persist
@@ -82,7 +77,11 @@ export default function configureStore(initialState) {
                 const state = {...outboundState};
                 for (const prop in state) {
                     if (state.hasOwnProperty(prop)) {
-                        state[prop] = transformSet(state[prop], setTransforms, false);
+                        state[prop] = transformSet(
+                            state[prop],
+                            setTransforms,
+                            false,
+                        );
                     }
                 }
 
@@ -100,12 +99,16 @@ export default function configureStore(initialState) {
             const KEY_PREFIX = 'reduxPersist:';
 
             localforage.ready().then(() => {
-                const persistor = persistStore(store, {storage, keyPrefix: KEY_PREFIX, ...options}, () => {
-                    store.dispatch({
-                        type: General.STORE_REHYDRATION_COMPLETE,
-                        complete: true,
-                    });
-                });
+                const persistor = persistStore(
+                    store,
+                    {storage, keyPrefix: KEY_PREFIX, ...options},
+                    () => {
+                        store.dispatch({
+                            type: General.STORE_REHYDRATION_COMPLETE,
+                            complete: true,
+                        });
+                    },
+                );
 
                 localforage.configObservables({
                     crossTabNotification: true,
@@ -118,22 +121,40 @@ export default function configureStore(initialState) {
 
                 const restoredState = {};
                 localforage.iterate((value, key) => {
-                    if (key && key.indexOf(KEY_PREFIX + 'storage:') === 0) {
-                        const keyspace = key.substr((KEY_PREFIX + 'storage:').length);
+                    if (
+                        key &&
+                        key.indexOf(KEY_PREFIX + 'storage:') === 0
+                    ) {
+                        const keyspace = key.substr(
+                            (KEY_PREFIX + 'storage:').length,
+                        );
                         restoredState[keyspace] = value;
                     }
                 }).then(() => {
-                    storageRehydrate(restoredState, persistor)(store.dispatch, store.getState);
+                    storageRehydrate(restoredState, persistor)(
+                        store.dispatch,
+                        store.getState,
+                    );
                 });
 
                 observable.subscribe({
                     next: (args) => {
-                        if (args.key && args.key.indexOf(KEY_PREFIX + 'storage:') === 0 && args.oldValue === null) {
-                            const keyspace = args.key.substr((KEY_PREFIX + 'storage:').length);
+                        if (
+                            args.key &&
+                            args.key.indexOf(KEY_PREFIX + 'storage:') ===
+                            0 &&
+                            args.oldValue === null
+                        ) {
+                            const keyspace = args.key.substr(
+                                (KEY_PREFIX + 'storage:').length,
+                            );
 
                             var statePartial = {};
                             statePartial[keyspace] = args.newValue;
-                            storageRehydrate(statePartial, persistor)(store.dispatch, store.getState);
+                            storageRehydrate(statePartial, persistor)(
+                                store.dispatch,
+                                store.getState,
+                            );
                         }
                     },
                 });
@@ -145,7 +166,11 @@ export default function configureStore(initialState) {
                     const state = store.getState();
                     const basePath = getBasePath(state);
 
-                    if (state.requests.users.logout.status === RequestStatus.SUCCESS && !purging) {
+                    if (
+                        state.requests.users.logout.status ===
+                        RequestStatus.SUCCESS &&
+                        !purging
+                    ) {
                         purging = true;
 
                         persistor.purge().then(() => {
@@ -157,7 +182,11 @@ export default function configureStore(initialState) {
 
                             store.dispatch({
                                 type: General.OFFLINE_STORE_RESET,
-                                data: Object.assign({}, reduxInitialState, initialState),
+                                data: Object.assign(
+                                    {},
+                                    reduxInitialState,
+                                    initialState,
+                                ),
                             });
 
                             setTimeout(() => {
@@ -179,15 +208,18 @@ export default function configureStore(initialState) {
             },
             whitelist,
             debounce: 30,
-            transforms: [
-                setTransformer,
-            ],
+            transforms: [setTransformer],
             _stateIterator: (collection, callback) => {
                 return Object.keys(collection).forEach((key) => {
                     if (key === 'storage') {
-                        Object.keys(collection.storage.storage).forEach((storageKey) => {
-                            callback(collection.storage.storage[storageKey], 'storage:' + storageKey);
-                        });
+                        Object.keys(collection.storage.storage).forEach(
+                            (storageKey) => {
+                                callback(
+                                    collection.storage.storage[storageKey],
+                                    'storage:' + storageKey,
+                                );
+                            },
+                        );
                     } else {
                         callback(collection[key], key);
                     }
@@ -212,5 +244,11 @@ export default function configureStore(initialState) {
         detectNetwork: detect,
     };
 
-    return configureServiceStore(initialState, appReducer, offlineOptions, getAppReducer, {enableBuffer: false});
+    return configureServiceStore(
+        initialState,
+        appReducer,
+        offlineOptions,
+        getAppReducer,
+        {enableBuffer: false},
+    );
 }

@@ -82,10 +82,10 @@ export function selectPostFromRightHandSideSearchByPostId(postId) {
     };
 }
 
-export function updateAcronymBloom(bloomData) {
+export function updateAcronymBloom(bloom) {
     return {
         type: ActionTypes.UPDATE_ACRONYM_BLOOM,
-        bloomData,
+        bloom,
     };
 }
 
@@ -114,7 +114,14 @@ export function performSearch(terms, isMentionSearch) {
         const userTimezone = getUserTimezone(getState(), userId);
         const userCurrentTimezone = getUserCurrentTimezone(userTimezone);
         const timezoneOffset = (userCurrentTimezone.length > 0 ? getUtcOffsetForTimeZone(userCurrentTimezone) : getBrowserUtcOffset()) * 60;
-        return dispatch(searchPostsWithParams(teamId, {terms, is_or_search: isMentionSearch, include_deleted_channels: viewArchivedChannels, time_zone_offset: timezoneOffset, page: 0, per_page: 20}, true));
+        return dispatch(searchPostsWithParams(teamId, {
+            terms,
+            is_or_search: isMentionSearch,
+            include_deleted_channels: viewArchivedChannels,
+            time_zone_offset: timezoneOffset,
+            page: 0,
+            per_page: 20,
+        }, true));
     };
 }
 

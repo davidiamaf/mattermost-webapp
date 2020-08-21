@@ -6,8 +6,19 @@ import emojiRegex from 'emoji-regex';
 import {getEmojiMap} from 'selectors/emojis';
 import store from 'stores/redux_store.jsx';
 
-import {formatText, autolinkAtMentions, autolinkAcronyms, highlightSearchTerms, handleUnicodeEmoji, parseSearchTerms} from 'utils/text_formatting';
+import {
+    formatText,
+    autolinkAtMentions,
+    autolinkAcronyms,
+    highlightSearchTerms,
+    handleUnicodeEmoji,
+    parseSearchTerms,
+} from 'utils/text_formatting';
 import LinkOnlyRenderer from 'utils/markdown/link_only_renderer';
+
+import {calculateBloom} from "../stores/redux_store";
+
+import {acronymExpanded, bloomMaybe} from "./text_formatting";
 
 describe('formatText', () => {
     test('jumbo emoji should be able to handle up to 3 spaces before the emoji character', () => {
@@ -22,6 +33,21 @@ describe('formatText', () => {
     });
 });
 
+describe("BloomOperation", () => {
+    it("can find the thing", () => {
+        const bloom = calculateBloom({
+            dod: {
+                Text: "DOD",
+                Brief: "$BRIEF0$$",
+                Description: "$DESCRIPTION0$$",
+            },
+        });
+        expect(bloomMaybe(bloom.bloom, "NOT")).not.toBeTruthy();
+        expect(bloomMaybe(bloom.bloom, "DOd")).toBeTruthy();
+        expect(bloomMaybe(bloom.bloom, "DOD")).toBeTruthy();
+    });
+});
+
 describe('autolinkAcronyms', () => {
     // testing to make sure @channel, @all & @here are setup properly to get highlighted correctly
     const acronymTestCases = [
@@ -29,45 +55,55 @@ describe('autolinkAcronyms', () => {
         'AOC',
         'AdCP',
     ];
+    const bloom = calculateBloom({
+        dod: {
+            Text: "DOD",
+            Brief: "$BRIEF0$$",
+            Definition: "$DEFINITION0$$",
+        },
+        aoc: {
+            Text: "AOC",
+            Brief: "$BRIEF0$$",
+            Definition: "$DEFINITION0$$",
+        },
+        adcp: {
+            Text: "ADCP",
+            Brief: "$BRIEF0$$",
+            Definition: "$DEFINITION0$$",
+        },
+    });
+
     function runSuccessfulAcronymTests(leadingText = '', trailingText = '') {
         acronymTestCases.forEach((testCase) => {
-            const acronym = `@${testCase}`;
+            const acronym = `${testCase}`;
             const text = `${leadingText}${acronym}${trailingText}`;
             const tokens = new Map();
 
-            const output = autolinkAcronyms(text, tokens);
-            let expected = `${leadingText}$ACRONYMDISPLAY$${trailingText}`;
+            const output = autolinkAcronyms(text, tokens, bloom);
+            let expected = text; //`${leadingText}{trailingText}`;
 
             // Deliberately remove all leading underscores since regex replaces underscore by treating it as non word boundary
             while (expected[0] === '_') {
                 expected = expected.substring(1);
             }
 
-            expect(output).toBe(expected);
-            expect(tokens.get('$ACRONYMDISPLAY$').value).toBe('<Tooltip title="Definition" arrow placement="bottom-end">Text<Button>Brief</Button></Tooltip>')
+            const index = `$MM_ACRONYM${acronym.toLowerCase()}$`;
+            expect(output).toBe(`${leadingText}$MM_ACRONYM${acronym.toLowerCase()}$${trailingText}`);
+            expect(tokens.get(index)?.value).toBe(acronymExpanded(bloom.terms.get(acronym.toLowerCase()), acronym));
+            expect(tokens.has(index)).toBe(true);
         });
     }
 
     function runUnsuccessfulAcronymTests(leadingText = '', trailingText = '') {
         acronymTestCases.forEach((testCase) => {
-            const mention = `@${testCase}`;
-            const text = `${leadingText}${mention}${trailingText}`;
+            const acronym = `${testCase}`;
+            const text = `${leadingText}${acronym}${trailingText}`;
             const tokens = new Map();
 
-            const output = autolinkAcronyms(text, tokens);
+            const output = autolinkAcronyms(text, tokens, bloom);
+            const index = `$MM_ACRONYM${acronym.toLowerCase()}$`;
+            expect(tokens.get(index)?.value).toBeUndefined();
             expect(output).toBe(text);
-            expect(tokens.get('$MM_ACRONYM0$')).toBeUndefined();
-        });
-    }
-    function runUnsuccessfulAcronymTestsMatchingNonSpecialMentions(leadingText = '', trailingText = '') {
-        acronymTestCases.forEach((testCase) => {
-            const mention = `@${testCase}`;
-            const text = `${leadingText}${mention}${trailingText}`;
-            const tokens = new Map();
-
-            const output = autolinkAcronyms(text, tokens);
-            expect(output).toBe(`${leadingText}$MM_ACRONYM0$`);
-            expect(tokens.get('$MM_ACRONYM0$').value).toBe(`<span data-mention="${testCase}${trailingText}">${mention}${trailingText}</span>`);
         });
     }
 
@@ -75,71 +111,52 @@ describe('autolinkAcronyms', () => {
     test('Acronym should highlight properly with no leading or trailing content', () => {
         runSuccessfulAcronymTests();
     });
-    test('@channel, @all, @here should highlight properly with a leading space', () => {
+    test('Acronym should highlight properly with a leading space', () => {
         runSuccessfulAcronymTests(' ', '');
     });
-    test('@channel, @all, @here should highlight properly with a trailing space', () => {
+    test('Acronym should highlight properly with a trailing space', () => {
         runSuccessfulAcronymTests('', ' ');
     });
-    test('@channel, @all, @here should highlight properly with a leading period', () => {
+    test('Acronym should highlight properly with a leading period', () => {
         runSuccessfulAcronymTests('.', '');
     });
-    test('@channel, @all, @here should highlight properly with a trailing period', () => {
+    test('Acronym should highlight properly with a trailing period', () => {
         runSuccessfulAcronymTests('', '.');
     });
-    test('@channel, @all, @here should highlight properly with multiple leading and trailing periods', () => {
+    test('Acronym should highlight properly with multiple leading and trailing periods', () => {
         runSuccessfulAcronymTests('...', '...');
     });
-    test('@channel, @all, @here should highlight properly with a leading dash', () => {
+    test('Acronym should highlight properly with a leading dash', () => {
         runSuccessfulAcronymTests('-', '');
     });
-    test('@channel, @all, @here should highlight properly with a trailing dash', () => {
+    test('Acronym should highlight properly with a trailing dash', () => {
         runSuccessfulAcronymTests('', '-');
     });
-    test('@channel, @all, @here should highlight properly with multiple leading and trailing dashes', () => {
+    test('Acronym should highlight properly with multiple leading and trailing dashes', () => {
         runSuccessfulAcronymTests('---', '---');
     });
-    test('@channel, @all, @here should highlight properly with a trailing underscore', () => {
+    test('Acronym should highlight properly with a trailing underscore', () => {
         runSuccessfulAcronymTests('', '____');
     });
-    test('@channel, @all, @here should highlight properly with multiple trailing underscores', () => {
+    test('Acronym should highlight properly with multiple trailing underscores', () => {
         runSuccessfulAcronymTests('', '____');
     });
-    test('@channel, @all, @here should highlight properly within a typical sentance', () => {
+    test('Acronym should highlight properly within a typical sentance', () => {
         runSuccessfulAcronymTests('This is a typical sentance, ', ' check out this sentance!');
     });
-    test('@channel, @all, @here should highlight with a leading underscore', () => {
+    test('Acronym should highlight with a leading underscore', () => {
         runSuccessfulAcronymTests('_');
     });
 
     // cases where highlights should be unsuccessful
-    test('@channel, @all, @here should not highlight when the last part of a word', () => {
+    test('Acronym should not highlight when the last part of a word', () => {
         runUnsuccessfulAcronymTests('testing');
     });
-    test('@channel, @all, @here should not highlight when in the middle of a word', () => {
+    test('Acronym should not highlight when in the middle of a word', () => {
         runUnsuccessfulAcronymTests('test', 'ing');
     });
-
-    // cases where highlights should be unsucessful but a non special mention should be created
-    test('@channel, @all, @here should be treated as non special mentions with trailing period followed by a word', () => {
-        runUnsuccessfulAcronymTestsMatchingNonSpecialMentions('Hello ', '.developers');
-    });
-    test('@channel, @all, @here should be treated as non special mentions with multiple trailing periods followed by a word', () => {
-        runUnsuccessfulAcronymTestsMatchingNonSpecialMentions('Hello ', '...developers');
-    });
-    test('@channel, @all, @here should be treated as non special mentions with trailing dash followed by a word', () => {
-        runUnsuccessfulAcronymTestsMatchingNonSpecialMentions('Hello ', '-developers');
-    });
-    test('@channel, @all, @here should be treated as non special mentions with multiple trailing dashes followed by a word', () => {
-        runUnsuccessfulAcronymTestsMatchingNonSpecialMentions('Hello ', '---developers');
-    });
-    test('@channel, @all, @here should be treated as non special mentions with trailing underscore followed by a word', () => {
-        runUnsuccessfulAcronymTestsMatchingNonSpecialMentions('Hello ', '_developers');
-    });
-    test('@channel, @all, @here should be treated as non special mentions with multiple trailing underscores followed by a word', () => {
-        runUnsuccessfulAcronymTestsMatchingNonSpecialMentions('Hello ', '___developers');
-    });
 });
+
 describe('autolinkAtMentions', () => {
     // testing to make sure @channel, @all & @here are setup properly to get highlighted correctly
     const mentionTestCases = [
@@ -147,6 +164,7 @@ describe('autolinkAtMentions', () => {
         'all',
         'here',
     ];
+
     function runSuccessfulAtMentionTests(leadingText = '', trailingText = '') {
         mentionTestCases.forEach((testCase) => {
             const mention = `@${testCase}`;
@@ -154,7 +172,7 @@ describe('autolinkAtMentions', () => {
             const tokens = new Map();
 
             const output = autolinkAtMentions(text, tokens);
-            let expected = `${leadingText}$MM_ACRONYM0$${trailingText}`;
+            let expected = `${leadingText}$MM_ATMENTION0$${trailingText}`;
 
             // Deliberately remove all leading underscores since regex replaces underscore by treating it as non word boundary
             while (expected[0] === '_') {
@@ -162,9 +180,10 @@ describe('autolinkAtMentions', () => {
             }
 
             expect(output).toBe(expected);
-            expect(tokens.get('$MM_ACRONYM0$').value).toBe(`<span data-mention="${testCase}">${mention}</span>`);
+            expect(tokens.get('$MM_ATMENTION0$').value).toBe(`<span data-mention="${testCase}">${mention}</span>`);
         });
     }
+
     function runUnsuccessfulAtMentionTests(leadingText = '', trailingText = '') {
         mentionTestCases.forEach((testCase) => {
             const mention = `@${testCase}`;
@@ -173,9 +192,10 @@ describe('autolinkAtMentions', () => {
 
             const output = autolinkAtMentions(text, tokens);
             expect(output).toBe(text);
-            expect(tokens.get('$MM_ACRONYM0$')).toBeUndefined();
+            expect(tokens.get('$MM_ATMENTION0$')).toBeUndefined();
         });
     }
+
     function runUnsuccessfulAtMentionTestsMatchingNonSpecialMentions(leadingText = '', trailingText = '') {
         mentionTestCases.forEach((testCase) => {
             const mention = `@${testCase}`;
@@ -183,8 +203,8 @@ describe('autolinkAtMentions', () => {
             const tokens = new Map();
 
             const output = autolinkAtMentions(text, tokens);
-            expect(output).toBe(`${leadingText}$MM_ACRONYM0$`);
-            expect(tokens.get('$MM_ACRONYM0$').value).toBe(`<span data-mention="${testCase}${trailingText}">${mention}${trailingText}</span>`);
+            expect(output).toBe(`${leadingText}$MM_ATMENTION0$`);
+            expect(tokens.get('$MM_ATMENTION0$').value).toBe(`<span data-mention="${testCase}${trailingText}">${mention}${trailingText}</span>`);
         });
     }
 

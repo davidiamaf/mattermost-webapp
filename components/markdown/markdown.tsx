@@ -10,6 +10,7 @@ import {Dictionary} from 'mattermost-redux/types/utilities';
 import messageHtmlToComponent from 'utils/message_html_to_component';
 import EmojiMap from 'utils/emoji_map';
 import {ChannelNamesMap, TextFormattingOptions, formatText, MentionKey} from 'utils/text_formatting';
+import {AcronymBloom} from "../../types/store";
 
 type Props = {
 
@@ -99,18 +100,8 @@ type Props = {
      */
     postType?: PostType;
     emojiMap: EmojiMap;
-}
 
-export interface AcronymData {
-    key: string;
-    Text: string;
-    Brief: string;
-    Definition: string;
-}
-
-export interface AcronymBloom {
-    bloom: string;
-    terms: { [key: string]: AcronymData };
+    acronymBloom?: AcronymBloom;
 }
 
 export default class Markdown extends React.PureComponent<Props> {
@@ -137,7 +128,6 @@ export default class Markdown extends React.PureComponent<Props> {
             mentionKeys: this.props.mentionKeys,
             atMentions: true,
             channelNamesMap: this.props.channelNamesMap,
-            acronymBloom: this.props.acronymBloom,
             proxyImages: this.props.hasImageProxy && this.props.proxyImages,
             team: this.props.team,
             minimumHashtagLength: this.props.minimumHashtagLength,
