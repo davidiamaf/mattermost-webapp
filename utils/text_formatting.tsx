@@ -170,6 +170,8 @@ interface TextFormattingOptionsBase {
      * Defaults to `3`.
      */
     minimumHashtagLength: number;
+
+    acronymData: AcronymData;
 }
 
 export type TextFormattingOptions = Partial<TextFormattingOptionsBase>;
@@ -615,14 +617,8 @@ function highlightCurrentMentions(
     return output;
 }
 
-interface Acronym {
-    Text: string;
-    Brief: string;
-    Definition: string;
-}
-
 function autolinkAcronyms(text: string, tokens: Tokens) {
-    const lookup = new Map<string, Acronym>([
+    const lookup = new Map<string, AcronymData>([
         [
             'DOD',
             {
@@ -633,7 +629,7 @@ function autolinkAcronyms(text: string, tokens: Tokens) {
         ],
     ]);
     const key = 'DOD';
-    const v = lookup.get(key) || {} as Acronym;
+    const v = lookup.get(key) || {} as AcronymData;
 
     // const acronymString = ` <Tooltip  class="tooltip-demo"title="${v.Brief} ${v.Definition}" arrow placement="bottom-end"><Button>${v.Text}</Button></Tooltip>`;
     //const acronymString = `<a href="#" data-toggle="popover" class="tooltip-text" title="${v.Brief}" data-content="${v.Definition}">${v.Text}</a><script>$(document).ready(function(){$('[data-toggle="popover"]').popover();});</script>`;
@@ -645,15 +641,17 @@ function autolinkAcronyms(text: string, tokens: Tokens) {
 }
 
 export interface AcronymData {
-    key: string;
+    key?: string;
     Text: string;
     Brief: string;
-    Definition: string;
+    Definition?: string;
 }
 
 function acronymExpanded(acronym: AcronymData, original: string): string {
-    return (
-        `<span
+    return (`<acronym-tooltip acronym-key="${acronym.key}" name="acronym-tooltip" >${original}</acronym-tooltip>`);
+}
+
+/*`<span
             className='tooltip-parent'
             title='${acronym.Brief}'
         >${original}
@@ -663,8 +661,7 @@ function acronymExpanded(acronym: AcronymData, original: string): string {
                 <span className='definition'>${ acronym.Definition }</span>
             </span>
         </span>
-    `);
-}
+    `*/
 
 function autolinkHashtags(
     text: string,
