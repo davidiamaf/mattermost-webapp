@@ -16,8 +16,9 @@ import {
 } from 'utils/text_formatting';
 import LinkOnlyRenderer from 'utils/markdown/link_only_renderer';
 
-import {acronymExpanded, bloomMaybe} from "./text_formatting";
 import {calculateBloom} from "../components/markdown/markdown";
+
+import {acronymExpanded, bloomMaybe} from "./text_formatting";
 
 describe('formatText', () => {
     test('jumbo emoji should be able to handle up to 3 spaces before the emoji character', () => {
