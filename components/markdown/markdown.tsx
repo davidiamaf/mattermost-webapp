@@ -3,7 +3,6 @@
 
 import React from 'react';
 
-import {x64} from "murmurhash3js";
 import {Team} from 'mattermost-redux/types/teams';
 import {PostImage, PostType} from 'mattermost-redux/types/posts';
 import {Dictionary} from 'mattermost-redux/types/utilities';
@@ -12,7 +11,7 @@ import {buffer} from "bitwise";
 
 import messageHtmlToComponent from 'utils/message_html_to_component';
 import EmojiMap from 'utils/emoji_map';
-import {ChannelNamesMap, TextFormattingOptions, formatText, MentionKey} from 'utils/text_formatting';
+import {ChannelNamesMap, TextFormattingOptions, formatText, MentionKey, AcronymData} from 'utils/text_formatting';
 
 import {AcronymBloom, AcronymData} from "../../types/store";
 
@@ -110,6 +109,8 @@ type Props = {
 
 interface Bloomable<T> {
     [key: string]: T;
+
+    acronymData: AcronymData;
 }
 
 export function calculateBloom<T>(termToKey: (p0: T) => string, terms: Bloomable<T>) {
@@ -324,6 +325,7 @@ export default class Markdown extends React.PureComponent<Props> {
             proxyImages: this.props.hasImageProxy && this.props.proxyImages,
             team: this.props.team,
             minimumHashtagLength: this.props.minimumHashtagLength,
+            acronymData: this.props.acronymData
         }, this.props.options);
 
         const htmlFormattedText = formatText(this.props.message, options, this.props.emojiMap, this.props.acronymBloom);
@@ -335,6 +337,7 @@ export default class Markdown extends React.PureComponent<Props> {
             postType: this.props.postType,
             mentionHighlight: this.props.options.mentionHighlight,
             disableGroupHighlight: this.props.options.disableGroupHighlight,
+            acronymData: this.props.acronymData,
         });
     }
 }

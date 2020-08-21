@@ -168,6 +168,8 @@ interface TextFormattingOptionsBase {
      * Defaults to `3`.
      */
     minimumHashtagLength: number;
+
+    acronymData: AcronymData;
 }
 
 export type TextFormattingOptions = Partial<TextFormattingOptionsBase>;
@@ -669,10 +671,8 @@ export function autolinkAcronyms(
     return output;
 }
 
-export function acronymExpanded(acronym: AcronymData, original: string): string {
-    return (
-        `<span title="${acronym.Brief}">${original}</span>`
-    );
+function acronymExpanded(acronym: AcronymData, original: string): string {
+    return (`<acronym-tooltip acronym-key="${acronym.key}" name="acronym-tooltip" >${original}</acronym-tooltip>`);
 }
 
 export function aacronymExpanded(acronym: AcronymData, original: string): string {

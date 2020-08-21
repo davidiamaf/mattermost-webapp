@@ -4,6 +4,10 @@
 import React from 'react';
 import {Parser, ProcessNodeDefinitions} from 'html-to-react';
 
+import Tooltip from 'react-bootstrap/lib/Tooltip';
+
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+
 import AtMention from 'components/at_mention';
 import LatexBlock from 'components/latex_block';
 import LinkTooltip from 'components/link_tooltip/link_tooltip';
@@ -23,7 +27,10 @@ import PostEmoji from 'components/post_emoji';
  * - imagesMetadata - the dimensions of the image as retrieved from post.metadata.images.
  * - hasPluginTooltips - If specified, the LinkTooltip component is placed inside links. Defaults to false.
  */
-export function messageHtmlToComponent(html, isRHS, options = {}) {
+
+
+export function messageHtmlToComponent(html, isRHS, options = {
+}) {
     if (!html) {
         return null;
     }
@@ -67,6 +74,32 @@ export function messageHtmlToComponent(html, isRHS, options = {}) {
             },
         });
     }
+
+    if (options.acronymData) {
+        const acronymKey = 'acronym-key';
+
+        processingInstructions.push({
+            replaceChildren: true,
+            shouldProcessNode: (node) => node.type === 'tag' && node.name === 'acronym-tooltip',
+            processNode: (node, children) => {
+                const acronym = node.attribs[acronymKey];
+
+                const renderTooltip = (props) => (
+                    <Tooltip {...props}>{acronym}</Tooltip>
+                );
+                return (
+                    <OverlayTrigger
+                        placement='top'
+                        acronymData={options.acronymData.terms.get(acronym)}
+                        overlay={renderTooltip}
+                    >
+                        {children} {'I\'m rendering something else!'}
+                    </OverlayTrigger>
+                );
+            },
+        });
+    }
+
     if (!('mentions' in options) || options.mentions) {
         const mentionHighlight = 'mentionHighlight' in options ? options.mentionHighlight : true;
         const disableGroupHighlight = 'disableGroupHighlight' in options ? options.disableGroupHighlight === true : false;
